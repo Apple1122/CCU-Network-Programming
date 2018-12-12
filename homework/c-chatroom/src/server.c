@@ -122,8 +122,8 @@ void client_handler(void *p_client) {
         leave_flag = 1;
     } else {
         strncpy(np->name, nickname, LENGTH_NAME);
-        printf("%s(%s)(%d) join the chatroom.\n", np->name, np->ip, np->data);
-        sprintf(send_buffer, "%s(%s) join the chatroom. Now we have %d people", np->name, np->ip, clientcount);
+        printf("%s(%s)(%d) join in. \n", np->name, np->ip, np->data);
+        sprintf(send_buffer, "%s(%s) join in. Now we have %d people", np->name, np->ip, clientcount);
         send_to_all_clients(np, send_buffer);
     }
 
@@ -139,8 +139,8 @@ void client_handler(void *p_client) {
             }
             sprintf(send_buffer, "%s：%s from %s", np->name, recv_buffer, np->ip);
         } else if (receive == 0 || strcmp(recv_buffer, "exit") == 0) {
-            printf("%s(%s)(%d) leave the chatroom.\n", np->name, np->ip, np->data);
-            sprintf(send_buffer, "%s(%s) leave the chatroom. Now we have %d people", np->name, np->ip, --clientcount);
+            printf("%s(%s)(%d) leave. \n", np->name, np->ip, np->data);
+            sprintf(send_buffer, "%s(%s) leave. Now we have %d people", np->name, np->ip, --clientcount);
             leave_flag = 1;
         } else {
             printf("Fatal Error: -1\n");
