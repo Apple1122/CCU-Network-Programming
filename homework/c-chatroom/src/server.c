@@ -18,6 +18,67 @@ int server_sockfd = 0, client_sockfd = 0;
 ClientList *root, *now;
 int clientcount = 0;
 
+int main()
+{
+    signal(SIGINT, terminate);
+
+    // Create socket
+    server_sockfd = socket(AF_INET , SOCK_STREAM , 0);
+    if (server_sockfd == -1) {
+        printf("Fail to create a socket.");
+        exit(EXIT_FAILURE);
+    }
+
+    // Socket information
+    struct sockaddr_in servaddr, cliaddr;
+
+    int s_addrlen = sizeof(servaddr);
+    int c_addrlen = sizeof(cliaddr);
+
+    memset(&servaddr, 0, s_addrlen);
+    memset(&cliaddr, 0, c_addrlen);
+
+    servaddr.sin_family = PF_INET;
+    servaddr.sin_addr.s_addr = INADDR_ANY;
+    servaddr.sin_port = htons(PORT);
+
+    // Bind and Listen
+    bind(server_sockfd, (struct sockaddr *)&servaddr, s_addrlen);
+    listen(server_sockfd, 5);
+
+    // Print Server IP
+    getsockname(server_sockfd, (struct sockaddr*) &servaddr, (socklen_t*) &s_addrlen);
+    printf("Start Server on: %s:%d\n", inet_ntoa(servaddr.sin_addr), ntohs(servaddr.sin_port));
+
+    // Initial linked list for clients
+    root = newNode(server_sockfd, inet_ntoa(servaddr.sin_addr));
+    now = root;
+
+    while (1) {
+        client_sockfd = accept(server_sockfd, (struct sockaddr*) &cliaddr, (socklen_t*) &c_addrlen);
+
+        // Print Client IP
+        getpeername(client_sockfd, (struct sockaddr*) &cliaddr, (socklen_t*) &c_addrlen);
+        printf("Client %s:%d come in.\n", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+
+        // Append linked list for clients
+        ClientList *c = newNode(client_sockfd, inet_ntoa(cliaddr.sin_addr));
+        c->prev = now;
+        now->link = c;
+        now = c;
+
+        pthread_t id;
+        if (pthread_create(&id, NULL, (void *)client_handler, (void *)c) != 0) {
+            perror("Create pthread error!\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return 0;
+}
+
+
+
 void terminate(int sig) {
     ClientList *tmp;
     
@@ -32,6 +93,7 @@ void terminate(int sig) {
     printf("Bye\n");
     exit(EXIT_SUCCESS);
 }
+
 
 void send_to_all_clients(ClientList *np, char tmp_buffer[]) {
     ClientList *tmp = root->link;
@@ -97,63 +159,4 @@ void client_handler(void *p_client) {
         np->link->prev = np->prev;
     }
     free(np);
-}
-
-int main()
-{
-    signal(SIGINT, terminate);
-
-    // Create socket
-    server_sockfd = socket(AF_INET , SOCK_STREAM , 0);
-    if (server_sockfd == -1) {
-        printf("Fail to create a socket.");
-        exit(EXIT_FAILURE);
-    }
-
-    // Socket information
-    struct sockaddr_in servaddr, cliaddr;
-
-    int s_addrlen = sizeof(servaddr);
-    int c_addrlen = sizeof(cliaddr);
-
-    memset(&servaddr, 0, s_addrlen);
-    memset(&cliaddr, 0, c_addrlen);
-
-    servaddr.sin_family = PF_INET;
-    servaddr.sin_addr.s_addr = INADDR_ANY;
-    servaddr.sin_port = htons(PORT);
-
-    // Bind and Listen
-    bind(server_sockfd, (struct sockaddr *)&servaddr, s_addrlen);
-    listen(server_sockfd, 5);
-
-    // Print Server IP
-    getsockname(server_sockfd, (struct sockaddr*) &servaddr, (socklen_t*) &s_addrlen);
-    printf("Start Server on: %s:%d\n", inet_ntoa(servaddr.sin_addr), ntohs(servaddr.sin_port));
-
-    // Initial linked list for clients
-    root = newNode(server_sockfd, inet_ntoa(servaddr.sin_addr));
-    now = root;
-
-    while (1) {
-        client_sockfd = accept(server_sockfd, (struct sockaddr*) &cliaddr, (socklen_t*) &c_addrlen);
-
-        // Print Client IP
-        getpeername(client_sockfd, (struct sockaddr*) &cliaddr, (socklen_t*) &c_addrlen);
-        printf("Client %s:%d come in.\n", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
-
-        // Append linked list for clients
-        ClientList *c = newNode(client_sockfd, inet_ntoa(cliaddr.sin_addr));
-        c->prev = now;
-        now->link = c;
-        now = c;
-
-        pthread_t id;
-        if (pthread_create(&id, NULL, (void *)client_handler, (void *)c) != 0) {
-            perror("Create pthread error!\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    return 0;
 }

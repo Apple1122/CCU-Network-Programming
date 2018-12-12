@@ -10,54 +10,17 @@
 #include <pthread.h>
 #include "proto.h"
 #include "string.h"
+#include "client.h"
 
 // Global variables
 volatile sig_atomic_t flag = 0;
 int sockfd = 0;
 char nickname[LENGTH_NAME] = {};
 
-void catch_ctrl_c_and_exit(int sig) {
-    flag = 1;
-}
-
-void recv_msg_handler() {
-    char receiveMessage[LENGTH_SEND] = {};
-    while (1) {
-        int receive = recv(sockfd, receiveMessage, LENGTH_SEND, 0);
-        if (receive > 0) {
-            printf("\r%s\n", receiveMessage);
-            str_overwrite_stdout();
-        } else if (receive == 0) {
-            break;
-        } else { 
-            // -1 
-        }
-    }
-}
-
-void send_msg_handler() {
-    char message[LENGTH_MSG] = {};
-    while (1) {
-        str_overwrite_stdout();
-        while (fgets(message, LENGTH_MSG, stdin) != NULL) {
-            str_trim_lf(message, LENGTH_MSG);
-            if (strlen(message) == 0) {
-                str_overwrite_stdout();
-            } else {
-                break;
-            }
-        }
-        send(sockfd, message, LENGTH_MSG, 0);
-        if (strcmp(message, "exit") == 0) {
-            break;
-        }
-    }
-    catch_ctrl_c_and_exit(2);
-}
 
 int main()
 {
-    signal(SIGINT, catch_ctrl_c_and_exit);
+    signal(SIGINT, terminate);
 
     // Naming
     printf("Please enter your name: ");
@@ -122,4 +85,43 @@ int main()
 
     close(sockfd);
     return 0;
+}
+
+void terminate(int sig) {
+    flag = 1;
+}
+
+void recv_msg_handler() {
+    char receiveMessage[LENGTH_SEND] = {};
+    while (1) {
+        int receive = recv(sockfd, receiveMessage, LENGTH_SEND, 0);
+        if (receive > 0) {
+            printf("\r%s\n", receiveMessage);
+            str_overwrite_stdout();
+        } else if (receive == 0) {
+            break;
+        } else { 
+            // -1 
+        }
+    }
+}
+
+void send_msg_handler() {
+    char message[LENGTH_MSG] = {};
+    while (1) {
+        str_overwrite_stdout();
+        while (fgets(message, LENGTH_MSG, stdin) != NULL) {
+            str_trim_lf(message, LENGTH_MSG);
+            if (strlen(message) == 0) {
+                str_overwrite_stdout();
+            } else {
+                break;
+            }
+        }
+        send(sockfd, message, LENGTH_MSG, 0);
+        if (strcmp(message, "exit") == 0) {
+            break;
+        }
+    }
+    terminate(2);
 }

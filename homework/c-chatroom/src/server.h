@@ -19,4 +19,8 @@ ClientList *newNode(int sockfd, char* ip) {
     return np;
 }
 
+void terminate(int);
+void send_to_all_clients(ClientList*, char[]);
+void client_handler(void*);
+
 #endif // LIST
