@@ -187,7 +187,7 @@ int main(int argc, char **argv)
 	pcap_freecode(&filter);
 	pcap_close(handle);
 
-	printf("\nCapture Over");
+	printf("\nCapture Over\n");
 
 	return 0;
 }
