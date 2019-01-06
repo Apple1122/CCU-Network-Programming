@@ -181,7 +181,7 @@ int main(int argc, char **argv)
 	printf("Start Sniffing\n\n");
 
 	// set our callback function
-	pcap_loop(handle, 4, got_packet, NULL);
+	pcap_loop(handle, 0, got_packet, NULL);
 	
 	// cleanup
 	pcap_freecode(&filter);
