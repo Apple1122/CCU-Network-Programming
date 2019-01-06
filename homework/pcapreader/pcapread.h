@@ -7,6 +7,7 @@
 #include <netinet/if_ether.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 #define BUFSIZE 4096
 #define SIZE_ETHERNET 14
